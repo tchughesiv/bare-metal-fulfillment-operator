@@ -1,6 +1,6 @@
 # bare-metal-fulfillment-operator
 
-Kubernetes operator for managing bare metal host pools in the OSAC project. Defines BareMetalPool and BareMetalInstance CRDs. Integrates with OpenStack inventory systems and Ironic for power management. Includes Helm charts for deployment.
+Kubernetes operator for managing bare metal host pools in the OSAC project. Defines BareMetalPool and BareMetalInstance CRDs. Integrates with OpenStack inventory systems and Ironic for power management. Defines Profiles which run Ansible playbooks for additional configuration on the CRDs. Includes Helm charts for deployment.
 
 ## Critical Rules
 
@@ -8,6 +8,7 @@ Kubernetes operator for managing bare metal host pools in the OSAC project. Defi
 - **Always `make helm-crds`** after regenerating CRDs (or run `make check-helm-crds` to verify sync)
 - **Never edit** `config/crd/`, `zz_generated.deepcopy.go` — these are generated
 - **Always `make lint`** before committing — fix all golangci-lint issues
+- **Always `go mod tidy`** before committing
 - Run `make lint test` before committing
 
 ## Dev Environment
@@ -48,8 +49,8 @@ bare-metal-fulfillment-operator/
 ├── internal/
 │   ├── controller/            # Reconciliation logic (pool + instance controllers)
 │   ├── helpers/               # Utility functions
-│   ├── inventory/             # Host inventory abstraction (OpenStack backend)
-│   ├── management/            # Power management (OpenStack Ironic)
+│   ├── inventory/             # BareMetalInstance's host inventory abstraction (pluggable backend interface)
+│   ├── management/            # BareMetalInstance's host management (power control)
 │   ├── profile/               # Profile configuration handling
 │   └── shared/                # Shared utilities
 ├── charts/
@@ -76,7 +77,7 @@ bare-metal-fulfillment-operator/
 ## Resources Managed
 
 - **BareMetalPool** — defines host sets (type + replica count) with optional profile; phases: Progressing, Ready, Failed, Deleting
-- **BareMetalInstance** — individual bare metal host allocation; phases: Allocating, Progressing, Ready, Failed, Deleting
+- **BareMetalInstance** — individual bare metal host with inventory allocation and power lifecycle; phases: Allocating, Progressing, Ready, Failed, Deleting
 
 ## Architecture
 
@@ -99,7 +100,7 @@ Management Client (Ironic)
 | Package | Purpose |
 |---------|---------|
 | `internal/controller/` | Pool and instance reconciliation (lifecycle, finalizers, status) |
-| `internal/inventory/` | Host allocation abstraction — OpenStack backend, host locking |
+| `internal/inventory/` | Host allocation abstraction — Pluggable backend interface and implementations, host locking |
 | `internal/management/` | Power control — OpenStack Ironic integration |
 | `internal/profile/` | Profile configuration and parameter injection |
 | `internal/shared/` | Shared utilities across controllers |
