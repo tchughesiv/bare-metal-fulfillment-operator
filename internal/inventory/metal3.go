@@ -140,12 +140,14 @@ func (m *Metal3Client) FindFreeHost(ctx context.Context, matchExpressions map[st
 	if hostType, ok := matchExpressions["hostType"]; ok && hostType != "" {
 		matchLabels[Metal3HostTypeLabel] = hostType
 	}
+	if len(matchLabels) > 0 {
+		listOpts = append(listOpts, client.MatchingLabels(matchLabels))
+	}
+
 	matchManagedBy := matchExpressions["managedBy"]
 	if matchManagedBy == "" {
 		matchManagedBy = shared.OsacDefaultManagedByValue
 	}
-	matchLabels[Metal3ManagedByLabel] = matchManagedBy
-	listOpts = append(listOpts, client.MatchingLabels(matchLabels))
 
 	bmhList := &metal3api.BareMetalHostList{}
 	if err := m.client.List(ctx, bmhList, listOpts...); err != nil {
@@ -163,6 +165,14 @@ func (m *Metal3Client) FindFreeHost(ctx context.Context, matchExpressions map[st
 		}
 
 		if bmh.Spec.ConsumerRef != nil {
+			continue
+		}
+
+		managedBy := bmh.Labels[Metal3ManagedByLabel]
+		if managedBy == "" {
+			managedBy = shared.OsacDefaultManagedByValue
+		}
+		if managedBy != matchManagedBy {
 			continue
 		}
 

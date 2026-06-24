@@ -301,6 +301,40 @@ func TestFindFreeHost(t *testing.T) {
 			t.Fatal("expected host (no hostType filter), got nil")
 		}
 	})
+
+	t.Run("defaults managed-by to baremetal when label is absent", func(t *testing.T) {
+		labels := map[string]string{Metal3HostTypeLabel: "gpu-node"}
+		bmh := newBMH("host-no-managed-by", labels, metal3api.OperationalStatusOK, metal3api.StateAvailable)
+
+		m := newMetal3ClientForTest(bmh)
+		host, err := m.FindFreeHost(ctx, map[string]string{"hostType": "gpu-node"})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if host == nil {
+			t.Fatal("expected host (managed-by defaults to baremetal), got nil")
+		}
+		if host.ManagedBy != "baremetal" {
+			t.Errorf("ManagedBy = %q, want %q", host.ManagedBy, "baremetal")
+		}
+	})
+
+	t.Run("excludes hosts with no managed-by label when explicit managedBy filter differs", func(t *testing.T) {
+		labels := map[string]string{Metal3HostTypeLabel: "gpu-node"}
+		bmh := newBMH("host-no-managed-by", labels, metal3api.OperationalStatusOK, metal3api.StateAvailable)
+
+		m := newMetal3ClientForTest(bmh)
+		host, err := m.FindFreeHost(ctx, map[string]string{
+			"hostType":  "gpu-node",
+			"managedBy": "agent",
+		})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if host != nil {
+			t.Errorf("expected nil (managed-by defaults to baremetal, not agent), got %+v", host)
+		}
+	})
 }
 
 // --- AssignHost ---
