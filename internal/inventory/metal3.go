@@ -59,6 +59,16 @@ type Metal3Client struct {
 	networkClass string
 }
 
+// NewMetal3ClientForTest creates a Metal3Client with an injected client for testing.
+func NewMetal3ClientForTest(k8sClient client.Client, namespace, hostClass, networkClass string) *Metal3Client {
+	return &Metal3Client{
+		client:       k8sClient,
+		namespace:    namespace,
+		hostClass:    hostClass,
+		networkClass: networkClass,
+	}
+}
+
 func NewMetal3Client(ctx context.Context, cfg *Config) (Client, error) {
 	namespace, err := parseMetal3Namespace(cfg)
 	if err != nil {
