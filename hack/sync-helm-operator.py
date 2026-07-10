@@ -58,19 +58,24 @@ CONFIGMAP_TO_VALUES: dict[str, str] = {
     "osac-profiles": "{{ .Values.configMaps.profiles }}",
 }
 
-# Environment variables for values that are required and environment-specific.
+# Environment variables for values that are environment-specific.
 # Only include variables that are expected to be changed at deploy time.
 # All other configuration uses reasonable defaults in the Go code.
+# AAP vars are conditional so the pod starts without AAP configured —
+# prepare-aap.sh patches them in post-install via `oc set env`.
 _ENV_BLOCK = """\
-          # Only configure values that are required and environment-specific
+          {{- if .Values.env.aapUrl }}
           - name: OSAC_AAP_URL
-            value: {{ required "env.aapUrl is required" .Values.env.aapUrl | quote }}
+            value: {{ .Values.env.aapUrl | quote }}
+          {{- end }}
+          {{- if .Values.env.aapTokenSecretName }}
           - name: OSAC_AAP_TOKEN
             valueFrom:
               secretKeyRef:
-                name: {{ required "env.aapTokenSecretName is required" .Values.env.aapTokenSecretName | quote }}
-                key: {{ required "env.aapTokenSecretKey is required" .Values.env.aapTokenSecretKey | quote }}
-                optional: false
+                name: {{ .Values.env.aapTokenSecretName | quote }}
+                key: {{ .Values.env.aapTokenSecretKey | default "token" | quote }}
+                optional: true
+          {{- end }}
 """
 
 # Matches a kustomize-generated labels block at exactly 2-space metadata indent.

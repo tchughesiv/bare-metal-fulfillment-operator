@@ -128,8 +128,8 @@ The following environment variables can be used to configure controller behavior
 
 #### AAP Provisioning Provider
 
-- **`OSAC_AAP_URL`** — AAP server URL (required).
-- **`OSAC_AAP_TOKEN`** — AAP authentication token (required).
+- **`OSAC_AAP_URL`** — AAP server URL. Optional at deploy time; injected post-install by `prepare-aap.sh`.
+- **`OSAC_AAP_TOKEN`** — AAP authentication token. Optional at deploy time; injected post-install by `prepare-aap.sh`.
 - **`OSAC_AAP_INSECURE_SKIP_VERIFY`** — skip TLS verification for AAP (default: `false`).
 - **`OSAC_AAP_STATUS_POLL_INTERVAL`** — job status polling interval (default: `10s`). Duration string, e.g. `30s`, `1m`.
 
