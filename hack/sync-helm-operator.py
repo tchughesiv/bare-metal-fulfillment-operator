@@ -76,6 +76,10 @@ _ENV_BLOCK = """\
                 key: {{ .Values.env.aapTokenSecretKey | default "token" | quote }}
                 optional: true
           {{- end }}
+          {{- if .Values.env.aapInsecureSkipVerify }}
+          - name: OSAC_AAP_INSECURE_SKIP_VERIFY
+            value: {{ .Values.env.aapInsecureSkipVerify | quote }}
+          {{- end }}
 """
 
 # Matches a kustomize-generated labels block at exactly 2-space metadata indent.

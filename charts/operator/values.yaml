@@ -31,3 +31,4 @@ env:
   aapUrl: ""
   aapTokenSecretName: "osac-aap-api-token"
   aapTokenSecretKey: "token"
+  aapInsecureSkipVerify: ""
