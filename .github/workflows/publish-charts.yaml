@@ -27,7 +27,9 @@ jobs:
         CONCLUSION: ${{ github.event.workflow_run.conclusion }}
         HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
       run: |
-        semver_re='^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-((0|[1-9][0-9]*)|[0-9A-Za-z-]*[A-Za-z-][0-9A-Za-z-]*)(\.((0|[1-9][0-9]*)|[0-9A-Za-z-]*[A-Za-z-][0-9A-Za-z-]*))*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$'
+        # No build-metadata (+...) suffix allowed: this tag is used verbatim as a
+        # container image tag downstream, and Docker/OCI tags cannot contain '+'.
+        semver_re='^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-((0|[1-9][0-9]*)|[0-9A-Za-z-]*[A-Za-z-][0-9A-Za-z-]*)(\.((0|[1-9][0-9]*)|[0-9A-Za-z-]*[A-Za-z-][0-9A-Za-z-]*))*)?$'
         if ! [[ "$HEAD_BRANCH" =~ $semver_re ]]; then
           echo "::error::Tag '$HEAD_BRANCH' is not a valid semver release tag"
           exit 1
@@ -78,7 +80,7 @@ jobs:
         TAG: ${{ needs.guard.outputs.tag }}
       run: |
         VERSION="${TAG#v}"
-        semver_re='^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-((0|[1-9][0-9]*)|[0-9A-Za-z-]*[A-Za-z-][0-9A-Za-z-]*)(\.((0|[1-9][0-9]*)|[0-9A-Za-z-]*[A-Za-z-][0-9A-Za-z-]*))*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$'
+        semver_re='^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-((0|[1-9][0-9]*)|[0-9A-Za-z-]*[A-Za-z-][0-9A-Za-z-]*)(\.((0|[1-9][0-9]*)|[0-9A-Za-z-]*[A-Za-z-][0-9A-Za-z-]*))*)?$'
         if ! [[ "$VERSION" =~ $semver_re ]]; then
           echo "::error::Tag '${TAG}' is not a valid semver release tag"
           exit 1
@@ -136,7 +138,7 @@ jobs:
         TAG: ${{ needs.guard.outputs.tag }}
       run: |
         VERSION="${TAG#v}"
-        semver_re='^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-((0|[1-9][0-9]*)|[0-9A-Za-z-]*[A-Za-z-][0-9A-Za-z-]*)(\.((0|[1-9][0-9]*)|[0-9A-Za-z-]*[A-Za-z-][0-9A-Za-z-]*))*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$'
+        semver_re='^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-((0|[1-9][0-9]*)|[0-9A-Za-z-]*[A-Za-z-][0-9A-Za-z-]*)(\.((0|[1-9][0-9]*)|[0-9A-Za-z-]*[A-Za-z-][0-9A-Za-z-]*))*)?$'
         if ! [[ "$VERSION" =~ $semver_re ]]; then
           echo "::error::Tag '${TAG}' is not a valid semver release tag"
           exit 1
@@ -182,13 +184,14 @@ jobs:
     - name: Create GitHub Release
       run: |
         gh release create "${TAG}" \
-          --repo "${{ github.repository }}" \
+          --repo "${REPO}" \
           --title "bare-metal-fulfillment-operator ${TAG}" \
           --generate-notes \
           --verify-tag \
         || gh release edit "${TAG}" \
-          --repo "${{ github.repository }}" \
+          --repo "${REPO}" \
           --title "bare-metal-fulfillment-operator ${TAG}"
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         TAG: ${{ needs.guard.outputs.tag }}
+        REPO: ${{ github.repository }}
