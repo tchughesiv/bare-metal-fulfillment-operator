@@ -619,6 +619,7 @@ var _ = Describe("BareMetalInstance Controller", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(result).To(Equal(ctrl.Result{}))
 				Expect(triggerCalled).To(BeFalse())
+				Expect(bareMetalInstance.Status.ProvisioningJobs).To(HaveLen(1))
 			})
 		})
 	})
