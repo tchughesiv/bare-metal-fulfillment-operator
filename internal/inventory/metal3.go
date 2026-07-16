@@ -164,7 +164,7 @@ func (m *Metal3Client) FindFreeHost(ctx context.Context, matchExpressions map[st
 		return nil, fmt.Errorf("failed to list BareMetalHosts: %w", err)
 	}
 
-	var candidates []metal3api.BareMetalHost
+	candidates := make([]metal3api.BareMetalHost, 0, len(bmhList.Items))
 	for _, bmh := range bmhList.Items {
 		if bmh.Status.OperationalStatus != metal3api.OperationalStatusOK {
 			continue

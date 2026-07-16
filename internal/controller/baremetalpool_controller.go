@@ -686,6 +686,9 @@ func (r *BareMetalPoolReconciler) reconcileProvisioning(ctx context.Context, bar
 				r.Client,
 				client.ObjectKeyFromObject(bareMetalPool),
 				&v1alpha1.BareMetalPool{},
+				func(obj client.Object) []opv1alpha1.JobStatus {
+					return obj.(*v1alpha1.BareMetalPool).Status.ProvisioningJobs
+				},
 			)
 		},
 		func() error {

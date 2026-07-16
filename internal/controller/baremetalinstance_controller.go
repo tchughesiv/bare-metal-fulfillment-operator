@@ -483,6 +483,9 @@ func (r *BareMetalInstanceReconciler) reconcileProvisioning(ctx context.Context,
 		func() bool {
 			return provisioning.CheckAPIServerForNonTerminalProvisionJob(
 				ctx, r.Client, client.ObjectKeyFromObject(bareMetalInstance), &v1alpha1.BareMetalInstance{},
+				func(obj client.Object) []opv1alpha1.JobStatus {
+					return obj.(*v1alpha1.BareMetalInstance).Status.ProvisioningJobs
+				},
 			)
 		},
 		func() error {
